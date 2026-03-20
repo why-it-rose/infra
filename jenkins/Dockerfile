@@ -1,7 +1,7 @@
 FROM jenkins/jenkins:lts
 
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
-ENV CASC_JENKINS_CONFIG=/var/jenkins_home/casc.yml
+ENV CASC_JENKINS_CONFIG=/etc/jenkins/casc.yml
 
 # 필수 플러그인 사전 설치
 RUN jenkins-plugin-cli --plugins \
@@ -11,4 +11,6 @@ RUN jenkins-plugin-cli --plugins \
     job-dsl \
     configuration-as-code
 
-COPY casc.yml /var/jenkins_home/casc.yml
+# /etc/jenkins는 볼륨 밖이므로 이미지 재빌드 시 항상 반영됨
+RUN mkdir -p /etc/jenkins
+COPY casc.yml /etc/jenkins/casc.yml
