@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  jenkins:
+    build:
+      context: ../jenkins
+      dockerfile: Dockerfile
+    image: wir-jenkins:latest
+    restart: unless-stopped
+    ports:
+      - "8090:8080"     # Jenkins UI
+      - "50000:50000"   # Jenkins agent 통신
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    env_file:
+      - .env.jenkins    # EC2_HOST_DEV, EC2_HOST_PROD, SLACK_WEBHOOK_URL 주입
+
+volumes:
+  jenkins_home:
+    driver: local

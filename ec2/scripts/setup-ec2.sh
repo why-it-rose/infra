@@ -3,19 +3,19 @@
 # Ubuntu EC2 초기 설정 스크립트
 # 실행: bash setup-ec2.sh
 #
-# 실행 후 배포에 필요한 파일:
-#   ~/wir/infra/docker-compose/.env.dev   ← DB URL, 비밀번호 등 환경변수
-#   ~/wir/infra/docker-compose/.env.prod  ← (prod EC2 한정)
+# 실행 후 수동으로 해야 할 것:
+#   1. ~/wir/infra/docker-compose/.env.jenkins 파일 생성 (아래 안내 참고)
+#   2. Jenkins UI(http://{IP}:8090)에서 EC2_SSH_KEY Credential 등록
 #
 set -euo pipefail
 
-INFRA_REPO_URL="https://github.com/<org>/infra.git"   # TODO: 실제 org 이름으로 교체
+INFRA_REPO_URL="https://github.com/why-it-rose/infra.git"
 WIR_DIR="$HOME/wir"
 
-echo "=== [1/6] 패키지 목록 업데이트 ==="
+echo "=== [1/7] 패키지 목록 업데이트 ==="
 sudo apt-get update -y
 
-echo "=== [2/6] Docker 설치 ==="
+echo "=== [2/7] Docker 설치 ==="
 sudo apt-get install -y ca-certificates curl gnupg lsb-release
 
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -32,17 +32,17 @@ echo \
 sudo apt-get update -y
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-echo "=== [3/6] Docker 서비스 시작 및 부팅 시 자동 시작 설정 ==="
+echo "=== [3/7] Docker 서비스 시작 및 부팅 시 자동 시작 설정 ==="
 sudo systemctl enable docker
 sudo systemctl start docker
 
-echo "=== [4/6] ubuntu 유저를 docker 그룹에 추가 ==="
+echo "=== [4/7] ubuntu 유저를 docker 그룹에 추가 ==="
 sudo usermod -aG docker ubuntu
 
-echo "=== [5/6] git 설치 ==="
+echo "=== [5/7] git 설치 ==="
 sudo apt-get install -y git
 
-echo "=== [6/6] 배포 디렉토리 설정 및 infra repo 클론 ==="
+echo "=== [6/7] 배포 디렉토리 설정 및 infra repo 클론 ==="
 mkdir -p "$WIR_DIR"
 cd "$WIR_DIR"
 
@@ -53,17 +53,35 @@ else
     echo "infra repo 이미 존재, 클론 생략"
 fi
 
+echo "=== [7/7] Jenkins 컨테이너 빌드 및 시작 ==="
+cd "$WIR_DIR/infra/docker-compose"
+
+if [ ! -f ".env.jenkins" ]; then
+    echo ""
+    echo "⚠️  .env.jenkins 파일이 없어 Jenkins를 시작할 수 없습니다."
+    echo "   아래 내용으로 $WIR_DIR/infra/docker-compose/.env.jenkins 파일을 생성하세요:"
+    echo ""
+    echo "   EC2_HOST_DEV=<dev EC2 IP>"
+    echo "   EC2_HOST_PROD=<prod EC2 IP>"
+    echo "   SLACK_WEBHOOK_URL=<Slack Webhook URL>"
+    echo ""
+    echo "   생성 후 아래 명령어로 Jenkins를 시작하세요:"
+    echo "   cd $WIR_DIR/infra/docker-compose"
+    echo "   docker compose -f docker-compose.jenkins.yml up -d --build"
+else
+    docker compose -f docker-compose.jenkins.yml up -d --build
+    echo "Jenkins 시작 완료: http://\$(curl -s ifconfig.me):8090"
+fi
+
 echo ""
 echo "=== 설치 완료 ==="
 echo ""
-echo "⚠️  다음 환경변수 파일을 직접 생성해야 합니다 (절대 Git에 커밋하지 마세요):"
+echo "⚠️  서비스 배포용 환경변수 파일도 생성 필요:"
 echo "   $WIR_DIR/infra/docker-compose/.env.dev"
 echo "   $WIR_DIR/infra/docker-compose/.env.prod"
 echo ""
-echo "   파일 예시:"
-echo "   DOCKERHUB_USERNAME=myusername"
-echo "   SPRING_DATASOURCE_URL=jdbc:mysql://..."
-echo "   SPRING_DATASOURCE_PASSWORD=..."
+echo "⚠️  Jenkins 시작 후 UI에서 EC2_SSH_KEY Credential 수동 등록 필요"
+echo "   Manage Jenkins → Credentials → SSH Username with private key"
 echo ""
 echo "⚠️  docker 그룹 적용을 위해 재로그인 또는 'newgrp docker' 실행 필요"
 echo ""
