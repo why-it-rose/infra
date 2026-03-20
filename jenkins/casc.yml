@@ -1,0 +1,80 @@
+# Jenkins Configuration as Code
+# 환경변수 치환: docker-compose의 env_file(.env.jenkins)에서 주입
+# TODO: <org> → 실제 GitHub org 이름으로 교체
+
+jenkins:
+  systemMessage: "왜 올랐지? CI/CD Jenkins"
+
+  # Shared Library 등록
+  globalLibraries:
+    libraries:
+      - name: "wir-shared-lib"
+        defaultVersion: "main"
+        implicit: false
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                remote: "https://github.com/why-it-rose/infra.git"
+                credentialsId: ""
+            libraryPath: "jenkins/shared-library"
+
+# Credentials 등록 (SSH key는 Jenkins UI에서 수동 등록 필요)
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              scope: GLOBAL
+              id: EC2_HOST_DEV
+              secret: "${EC2_HOST_DEV}"
+              description: "dev EC2 host IP"
+          - string:
+              scope: GLOBAL
+              id: EC2_HOST_PROD
+              secret: "${EC2_HOST_PROD}"
+              description: "prod EC2 host IP"
+          - string:
+              scope: GLOBAL
+              id: SLACK_WEBHOOK_URL
+              secret: "${SLACK_WEBHOOK_URL}"
+              description: "Slack Incoming Webhook URL"
+
+# Job 생성 (Job DSL)
+jobs:
+  - script: |
+      pipelineJob('wir-backend-dev') {
+        description('backend dev 배포 (develop 브랜치)')
+        parameters {
+          stringParam('IMAGE_TAG', '', 'Docker image tag (git SHA, GitHub Actions에서 전달)')
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('https://github.com/why-it-rose/backend.git') }
+                branch('*/develop')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }
+
+      pipelineJob('wir-backend-prod') {
+        description('backend prod 배포 (main 브랜치)')
+        parameters {
+          stringParam('IMAGE_TAG', '', 'Docker image tag (git SHA, GitHub Actions에서 전달)')
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('https://github.com/why-it-rose/backend.git') }
+                branch('*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }

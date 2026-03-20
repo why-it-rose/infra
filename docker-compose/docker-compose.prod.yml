@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${DOCKERHUB_USERNAME}/wir-backend:${BACKEND_IMAGE_TAG:-prod}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.prod
+    networks:
+      - wir-network
+
+  ai:
+    image: ${DOCKERHUB_USERNAME}/wir-ai:${AI_IMAGE_TAG:-prod}
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.prod
+    networks:
+      - wir-network
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../ec2/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - ai
+    networks:
+      - wir-network
+
+networks:
+  wir-network:
+    driver: bridge
