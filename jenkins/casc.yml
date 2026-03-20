@@ -5,7 +5,8 @@
 jenkins:
   systemMessage: "왜 올랐지? CI/CD Jenkins"
 
-  # Shared Library 등록
+# Shared Library 등록 (globalLibraries는 unclassified 하위에 위치)
+unclassified:
   globalLibraries:
     libraries:
       - name: "wir-shared-lib"
