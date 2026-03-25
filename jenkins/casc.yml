@@ -5,6 +5,19 @@
 jenkins:
   systemMessage: "왜 올랐지? CI/CD Jenkins"
 
+  # 로컬 계정 인증 설정
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: "${JENKINS_ADMIN_PASSWORD}"
+
+  # 로그인한 사용자만 접근 가능
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
 # Shared Library 등록 (globalLibraries는 unclassified 하위에 위치)
 unclassified:
   globalLibraries:
