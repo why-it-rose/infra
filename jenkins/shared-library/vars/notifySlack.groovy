@@ -1,3 +1,11 @@
+def getBuildUrl(build) {
+    try {
+        return build.absoluteUrl
+    } catch (e) {
+        return "N/A (Jenkins URL 미설정)"
+    }
+}
+
 def call(Map config) {
     def color = config.status == 'success' ? 'good' : 'danger'
     def statusText = config.status == 'success' ? '성공 ✅' : '실패 ❌'
@@ -10,7 +18,7 @@ def call(Map config) {
             {"title": "서비스", "value": "${config.service}", "short": true},
             {"title": "환경",   "value": "${config.env}",     "short": true},
             {"title": "이미지 태그", "value": "${config.tag}", "short": true},
-            {"title": "빌드 URL", "value": "${currentBuild.absoluteUrl}", "short": false}
+            {"title": "빌드 URL", "value": "${getBuildUrl(currentBuild)}", "short": false}
         ]
     }]
 }"""
