@@ -1,6 +1,7 @@
 def call(Map config) {
     def env = config.env
     def imageTag = config.imageTag
+    def batchImageTag = config.batchImageTag
     def hostCredId = env == 'prod' ? 'EC2_HOST_PROD' : 'EC2_HOST_DEV'
     def composeFile = "~/wir/infra/docker-compose/docker-compose.${env}.yml"
 
@@ -9,8 +10,8 @@ def call(Map config) {
             sh """
                 ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} \
                     'cd ~/wir/infra && git fetch origin && git reset --hard origin/main && \
-                    BACKEND_IMAGE_TAG=${imageTag} docker compose -f ${composeFile} pull backend && \
-                    BACKEND_IMAGE_TAG=${imageTag} docker compose -f ${composeFile} up -d backend'
+                    BACKEND_IMAGE_TAG=${imageTag} BATCH_IMAGE_TAG=${batchImageTag} docker compose -f ${composeFile} pull backend batch && \
+                    BACKEND_IMAGE_TAG=${imageTag} BATCH_IMAGE_TAG=${batchImageTag} docker compose -f ${composeFile} up -d backend batch'
             """
 
             // 헬스체크: 최대 30초 (5초 간격, 6회)
