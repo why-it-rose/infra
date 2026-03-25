@@ -8,7 +8,7 @@ def call(Map config) {
         sshagent(credentials: ['EC2_SSH_KEY']) {
             sh """
                 ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} \
-                    'cd ~/wir/infra && git pull && \
+                    'cd ~/wir/infra && git fetch origin && git reset --hard origin/main && \
                     BACKEND_IMAGE_TAG=${imageTag} docker compose -f ${composeFile} pull backend && \
                     BACKEND_IMAGE_TAG=${imageTag} docker compose -f ${composeFile} up -d backend'
             """
