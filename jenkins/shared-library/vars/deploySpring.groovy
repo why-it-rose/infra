@@ -8,14 +8,11 @@ def call(Map config) {
 
     withCredentials([string(credentialsId: hostCredId, variable: 'EC2_HOST')]) {
         sshagent(credentials: ['EC2_SSH_KEY']) {
-            def deployServices = (batchImageTag && batchImageTag != 'null') ? 'backend batch' : 'backend'
-            def batchEnv = (batchImageTag && batchImageTag != 'null') ? "BATCH_IMAGE_TAG=${batchImageTag} " : ''
-
             sh """
                 ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} \
                     'cd ~/wir/infra && git fetch origin && git reset --hard origin/${infraBranch} && \
-                    BACKEND_IMAGE_TAG=${imageTag} ${batchEnv}docker compose -f ${composeFile} pull ${deployServices} && \
-                    BACKEND_IMAGE_TAG=${imageTag} ${batchEnv}docker compose -f ${composeFile} up -d ${deployServices}'
+                    BACKEND_IMAGE_TAG=${imageTag} BATCH_IMAGE_TAG=${batchImageTag} docker compose -f ${composeFile} pull backend batch && \
+                    BACKEND_IMAGE_TAG=${imageTag} BATCH_IMAGE_TAG=${batchImageTag} docker compose -f ${composeFile} up -d backend batch'
             """
 
             // 헬스체크: 최대 30초 (5초 간격, 6회)
