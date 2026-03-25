@@ -3,13 +3,14 @@ def call(Map config) {
     def imageTag = config.imageTag
     def batchImageTag = config.batchImageTag
     def hostCredId = env == 'prod' ? 'EC2_HOST_PROD' : 'EC2_HOST_DEV'
+    def infraBranch = env == 'prod' ? 'main' : 'develop'
     def composeFile = "~/wir/infra/docker-compose/docker-compose.${env}.yml"
 
     withCredentials([string(credentialsId: hostCredId, variable: 'EC2_HOST')]) {
         sshagent(credentials: ['EC2_SSH_KEY']) {
             sh """
                 ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} \
-                    'cd ~/wir/infra && git fetch origin && git reset --hard origin/main && \
+                    'cd ~/wir/infra && git fetch origin && git reset --hard origin/${infraBranch} && \
                     BACKEND_IMAGE_TAG=${imageTag} BATCH_IMAGE_TAG=${batchImageTag} docker compose -f ${composeFile} pull backend batch && \
                     BACKEND_IMAGE_TAG=${imageTag} BATCH_IMAGE_TAG=${batchImageTag} docker compose -f ${composeFile} up -d backend batch'
             """
