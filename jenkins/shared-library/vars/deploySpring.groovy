@@ -9,8 +9,8 @@ def call(Map config) {
             sh """
                 ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} \
                     'cd ~/wir/infra && git pull && \
-                    BACKEND_IMAGE_TAG=${imageTag} docker-compose -f ${composeFile} pull backend && \
-                    BACKEND_IMAGE_TAG=${imageTag} docker-compose -f ${composeFile} up -d backend'
+                    BACKEND_IMAGE_TAG=${imageTag} docker compose -f ${composeFile} pull backend && \
+                    BACKEND_IMAGE_TAG=${imageTag} docker compose -f ${composeFile} up -d backend'
             """
 
             // 헬스체크: 최대 30초 (5초 간격, 6회)
