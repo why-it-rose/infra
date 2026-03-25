@@ -8,7 +8,7 @@ def call(Map config) {
         sshagent(credentials: ['EC2_SSH_KEY']) {
             sh """
                 ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} \
-                    'cd ~/wir/infra && git pull && \
+                    'cd ~/wir/infra && git fetch origin && git reset --hard origin/main && \
                     BACKEND_IMAGE_TAG=${imageTag} docker compose -f ${composeFile} pull backend && \
                     BACKEND_IMAGE_TAG=${imageTag} docker compose -f ${composeFile} up -d backend'
             """
@@ -18,7 +18,7 @@ def call(Map config) {
             for (int i = 0; i < 6; i++) {
                 sleep(5)
                 def code = sh(
-                    script: "ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} 'curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/actuator/health'",
+                    script: "ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} 'curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/actuator/health || echo 000'",
                     returnStdout: true
                 ).trim()
                 if (code == '200') {
