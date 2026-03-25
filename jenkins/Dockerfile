@@ -12,5 +12,7 @@ RUN jenkins-plugin-cli --plugins \
     configuration-as-code
 
 # /etc/jenkins는 볼륨 밖이므로 이미지 재빌드 시 항상 반영됨
+USER root
 RUN mkdir -p /etc/jenkins
 COPY casc.yml /etc/jenkins/casc.yml
+USER jenkins
