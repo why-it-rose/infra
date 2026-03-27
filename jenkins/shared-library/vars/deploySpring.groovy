@@ -15,10 +15,10 @@ def call(Map config) {
                     BACKEND_IMAGE_TAG=${imageTag} BATCH_IMAGE_TAG=${batchImageTag} docker compose -f ${composeFile} up -d backend batch'
             """
 
-            // 헬스체크: 최대 30초 (5초 간격, 6회)
+            // 헬스체크: 최대 90초 (10초 간격, 9회)
             def healthy = false
-            for (int i = 0; i < 6; i++) {
-                sleep(5)
+            for (int i = 0; i < 9; i++) {
+                sleep(10)
                 def code = sh(
                     script: "ssh -o StrictHostKeyChecking=no ubuntu@\${EC2_HOST} 'curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/actuator/health' || echo 000",
                     returnStdout: true
