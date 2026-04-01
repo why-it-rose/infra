@@ -32,16 +32,34 @@ services:
   nginx:
     image: nginx:alpine
     restart: unless-stopped
+    entrypoint: ["/bin/sh", "/etc/nginx/entrypoint.sh"]
+    environment:
+      - DOMAIN=${DOMAIN}
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ../ec2/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../ec2/nginx/entrypoint.sh:/etc/nginx/entrypoint.sh:ro
+      - ../ec2/nginx/default.conf:/etc/nginx/templates/default-http.conf:ro
+      - ../ec2/nginx/default-https.conf.template:/etc/nginx/templates/default-https.conf.template:ro
+      - certbot-certs:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
     depends_on:
       - backend
       - ai
     networks:
       - wir-network
 
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-certs:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+
 networks:
   wir-network:
     driver: bridge
+
+volumes:
+  certbot-certs:
+  certbot-www:
