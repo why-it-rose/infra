@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-envsubst '${PROD_EC2_HOST}' \
-  < /etc/prometheus/prometheus.yml.template \
+sed "s|\${PROD_EC2_HOST}|${PROD_EC2_HOST}|g" \
+  /etc/prometheus/prometheus.yml.template \
   > /tmp/prometheus.yml
 
 exec /bin/prometheus \
